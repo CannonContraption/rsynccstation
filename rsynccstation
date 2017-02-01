@@ -21,14 +21,14 @@ excludes="--exclude-from $path_to_excludes" #if you prefer to hard-code exludes,
 sshcommand="ssh -p $portnumber" #This is the SSH command. If you need extra params to login, place them here
 
 #From here down is the code to sync stuff itself. Most of the params should be above.
-rsync -avucr $excludes -e $sshcommand $username@$server:$source_path $dest_path
+rsync -avucr $excludes -e "$sshcommand" $username@$server:$source_path $dest_path
 if [ $? == 0 ]; then
 	echo -e "\e[1;32mPull complete. Beginning push...\e[m"
 else
 	echo -e "\033[1;31mFailed to fetch updates. Please diagnose and rerun the script.\033[m"
 	exit;
 fi
-rsync -avucr $excludes -e $sshcommand $source_path $username@$server:$dest_path
+rsync -avucr $excludes -e "$sshcommand" $source_path $username@$server:$dest_path
 if [ $? == 0 ]; then
 	echo -e "\e[1;32mPush complete. Script is successful.\e[m"
 else
