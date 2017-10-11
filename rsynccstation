@@ -18,17 +18,24 @@ dest_path="/..../" #Path to what you're syncing without the folder itself
 
 #Tools
 excludes="--exclude-from $path_to_excludes" #if you prefer to hard-code exludes, use this variable instead of the excludes file
-sshcommand="ssh -p $portnumber" #This is the SSH command. If you need extra params to login, place them here
+#Sets the server and port information. If no arguments, used settings above. Otherwise takes first argument as server and second as port.
+#Note that the second argument depends on the first, but not vice-versa.
+if [ $# -gt 0 ]; then
+	server=$1
+	if [ $# -gt 1 ]; then
+		portnumber=$2
+	fi
+fi
 
 #From here down is the code to sync stuff itself. Most of the params should be above.
-rsync -avucr $excludes -e "$sshcommand" $username@$server:$source_path $dest_path
+rsync -avucr --info=progress2 $excludes -e "$sshcommand" $username@$server:$source_path $dest_path
 if [ $? == 0 ]; then
 	echo -e "\e[1;32mPull complete. Beginning push...\e[m"
 else
 	echo -e "\033[1;31mFailed to fetch updates. Please diagnose and rerun the script.\033[m"
 	exit;
 fi
-rsync -avucr $excludes -e "$sshcommand" $source_path $username@$server:$dest_path
+rsync -avucr -info=progress2 $excludes -e "$sshcommand" $source_path $username@$server:$dest_path
 if [ $? == 0 ]; then
 	echo -e "\e[1;32mPush complete. Script is successful.\e[m"
 else
