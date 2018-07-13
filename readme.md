@@ -1,8 +1,8 @@
-#RSyncCStation
+# RSyncCStation
 
 A simple RSync wrapper script
 
-##Purpose
+## Purpose
 
 As a university student with a lot of computers which I use for schoolwork, I started noticing a problem. I was using my dad's DiskStation in order to use the CloudStation sync service. Unfortunately, when there was a system update or the network went down, that caused problems. When he finally decided to upgrade our aging DiskStation to a newer model, I had to re-enter my credentials on every computer I used.
 
@@ -10,7 +10,7 @@ This prompted me to come up with my own solution. I booted a Raspberry Pi on the
 
 This is the evolution of that original script.
 
-##Useage
+## Useage
 
 In order to use RSyncCStation, it is a good idea to create a ~/bin folder, and a ~/SyncMe folder. Everything you want synced will go in the ~/SyncMe folder. Add a line to your bashrc to add ~/bin to your path.
 
