@@ -1,44 +1,85 @@
-#!/bin/bash
+#!/bin/sh
+
 #Server parameters
 server="10.0.0.1" #Change this to your server's IP address
-username="jim"
-portnumber="20" #Your SSH server's port number.
+username="joe"
+portnumber="22" #Your SSH server's port number.
 
 
 #Excluded files
 #I added an example excludes file based on files I've had problems with in the past.
-path_to_excludes="...../rsyncexcludes.txt" #Change this to the path to the excludes file
+path_to_excludes="$HOME/.rsexcludes" #Change this to the path to the excludes file
 
 #source and destination
 #Please note that due to the nature of rsync, these MUST be absolute paths. They also
 #must match on the source and destination, so if you mirror /home/joey/SyncMe on one
 #machine, you'll get /home/joey/SyncMe on the other.
-source_path="/..../SyncMe" #Path to what you're syncing plus the folder name itself
-dest_path="/..../" #Path to what you're syncing without the folder itself
+source_path="$HOME/sync" #Path to what you're syncing
 
 #Tools
-excludes="--exclude-from $path_to_excludes" #if you prefer to hard-code exludes, use this variable instead of the excludes file
-#Sets the server and port information. If no arguments, used settings above. Otherwise takes first argument as server and second as port.
-#Note that the second argument depends on the first, but not vice-versa.
-if [ $# -gt 0 ]; then
-	server=$1
-	if [ $# -gt 1 ]; then
-		portnumber=$2
-	fi
+excludes="--exclude-from $path_to_excludes" #if you prefer to hard-code
+#exludes, use this variable instead of the excludes file
+
+# Help dialog. Shows the rsynccstation help page.
+helpdialog()
+{
+    echo '\033[32m'
+    echo '.__  ._  _ _ __|_ _._|_o _ ._'
+    echo '|_>\/| |(_(__> |_(_| |_|(_)| |'
+    echo '   / 2016-19 CannonContraption'
+    echo '\033[m'
+    echo 'USEAGE: rsynccstation [options]'
+    echo
+    echo 'options:'
+    echo '\033[1;34m  -h            \033[33m| Show this help screen'
+    echo '\033[1;34m  -s (server)   \033[33m| Specify a server'
+    echo '\033[1;34m  -p (port)     \033[33m| Specify a port'
+    echo '\033[1;34m  -u (username) \033[33m| Specify a username\033[m'
+    exit
+}
+
+# Automatic parameters
+dest_path=$(echo $source_path | awk -F '/' '{OFS="/"; $(NF)=""; print $0}')
+
+
+# Argument parsing.
+# For this new version of rscs, we're using actual argument parsing, rather than
+# using some static syntax.
+sshcommand="ssh"
+while [ $# != 0 ]; do
+    case $1 in
+        "-p" ) shift;
+               sshcommand="$sshcommand -p $1" ;;
+        "-s" ) shift;
+               server="$1" ;;
+        "-u" ) shift;
+               username="$1" ;;
+        "-h" ) helpdialog ;;
+        *    ) echo "Argument not valid. Bailing out." 2>&1 >/dev/null;
+               exit 1;
+    esac
+    if [ $# = 0 ]; then
+        echo "You are missing a parameter."
+        exit 1
+    fi
+    shift
+done
+
+# From here down is the code to sync stuff itself.
+# Start with an rsync pull operation. Bring in new files first.
+rsync -avucr --info=progress2 $excludes -e "$sshcommand" $username@$server:$source_path $dest_path
+if [ $? = 0 ]; then
+	echo "\033[1;32mPull complete. Beginning push...\033[m"
+else
+	echo "\033[1;31mFailed to fetch updates.\033[m Quit."
+	exit 2;
 fi
 
-#From here down is the code to sync stuff itself. Most of the params should be above.
-rsync -avucr --info=progress2 $excludes -e "$sshcommand" $username@$server:$source_path $dest_path
-if [ $? == 0 ]; then
-	echo -e "\e[1;32mPull complete. Beginning push...\e[m"
+# Then send any locally changed files.
+rsync -avucr --info=progress2 $excludes -e "$sshcommand" $source_path $username@$server:$dest_path
+if [ $? = 0 ]; then
+	echo "\033[1;32mPush complete. Script is successful.\033[m"
 else
-	echo -e "\033[1;31mFailed to fetch updates. Please diagnose and rerun the script.\033[m"
-	exit;
-fi
-rsync -avucr -info=progress2 $excludes -e "$sshcommand" $source_path $username@$server:$dest_path
-if [ $? == 0 ]; then
-	echo -e "\e[1;32mPush complete. Script is successful.\e[m"
-else
-	echo -e "\e[1;31mPush failed. Please diagnose and rerun the script.\e[m"
-	exit;
+	echo "\033[1;31mPush failed. Please diagnose and rerun the script.\033[m"
+	exit 3;
 fi
