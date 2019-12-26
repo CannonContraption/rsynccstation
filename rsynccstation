@@ -109,7 +109,7 @@ sync_one()
     if [ $? = 0 ]; then
 	echo "\033[1;32mPull complete. Beginning push...\033[m"
     else
-	echo "\033[1;31mFailed to fetch updates.\033[m Quit."
+	echo "\033[1;31mFailed to fetch files.\033[m Quit."
 	exit 2;
     fi
 
@@ -120,7 +120,7 @@ sync_one()
     if [ $? = 0 ]; then
 	echo "\033[1;32mPush complete. Script is successful.\033[m"
     else
-	echo "\033[1;31mPush failed. Please diagnose and rerun the script.\033[m"
+	echo "\033[1;31mFailed to push files.\033[m Quit."
 	exit 3;
     fi
 }
