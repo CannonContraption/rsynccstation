@@ -4,7 +4,8 @@
 server="10.0.0.1" #Change this to your server's IP address
 username="joe"
 portnumber="22" #Your SSH server's port number.
-
+upload="yes"
+download="yes"
 
 #Excluded files
 #I added an example excludes file based on files I've had problems with in the past.
@@ -31,11 +32,12 @@ excludes="--exclude-from $path_to_excludes" #if you prefer to hard-code
 #exludes, use this variable instead of the excludes file
 
 # RSync Options
-rsoptions="-avu"
+rsoptions="-avu --progress=info2"
 # DEFAULT OPTIONS:
-#  -a   | archive (-rlptgoD)
-#  -v   | verbose
-#  -u   | update (skip newer files)
+#  -a              | archive (-rlptgoD)
+#  -v              | verbose
+#  -u              | update (skip newer files)
+# --progress=info2 | Show file sync progress
 
 # Targets list. Pretty-prints all targets.
 targetslist()
@@ -57,6 +59,8 @@ helpdialog()
     echo 'options:'
     echo '\033[1;34m  -h            \033[33m| Show this help screen'
     echo '\033[1;34m  -t            \033[33m| Show list of targets'
+    echo '\033[1;34m  -up           \033[33m| Only upload files, not download'
+    echo '\033[1;34m  -dn           \033[33m| Only download files, not upload'
     echo '\033[1;34m  -s (server)   \033[33m| Specify a server'
     echo '\033[1;34m  -p (port)     \033[33m| Specify a port'
     echo '\033[1;34m  -u (username) \033[33m| Specify a username\033[m'
@@ -77,6 +81,8 @@ while [ $# != 0 ]; do
                username="$1" ;;
         "-h" ) helpdialog ;;
         "-t" ) targetslist ;;
+        "-up" ) unset download ;;
+        "-dn" ) unset upload ;;
         *    ) if [ -n "$target" ]; then
                    target="$target;;;;;$1"
                else
@@ -97,7 +103,9 @@ sync_one()
     dest_path=$(echo $source_path | awk -F '/' '{OFS="/"; $(NF)=""; print $0}')
     # From here down is the code to sync stuff itself.
     # Start with an rsync pull operation. Bring in new files first.
-    rsync $rsoptions --info=progress2 $excludes -e "$sshcommand" $username@$server:$source_path $dest_path
+    if [ -n "$download" ]; then
+        rsync $rsoptions $excludes -e "$sshcommand" $username@$server:$source_path $dest_path
+    fi
     if [ $? = 0 ]; then
 	echo "\033[1;32mPull complete. Beginning push...\033[m"
     else
@@ -106,7 +114,9 @@ sync_one()
     fi
 
     # Then send any locally changed files.
-    rsync $rsoptions --info=progress2 $excludes -e "$sshcommand" $source_path $username@$server:$dest_path
+    if [ -n "$upload" ]; then
+        rsync $rsoptions $excludes -e "$sshcommand" $source_path $username@$server:$dest_path
+    fi
     if [ $? = 0 ]; then
 	echo "\033[1;32mPush complete. Script is successful.\033[m"
     else
