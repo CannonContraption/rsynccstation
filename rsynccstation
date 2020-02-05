@@ -1,29 +1,33 @@
 #!/bin/sh
 
-#Server parameters
-server="10.0.0.1" #Change this to your server's IP address
-username="joe"
-portnumber="22" #Your SSH server's port number.
+RSYNCCSTATIONRC="$HOME/.config/rscs/rsynccstation.rc"
+
+if [ ! -d "$HOME/.config/rscs" ]; then
+    mkdir --parents $HOME/.config/rscs
+    echo 'server="10.0.0.1"' > $RSYNCCSTATIONRC
+    echo 'portnumber="22"' >> $RSYNCCSTATIONRC
+    echo 'username="joe"' >> $RSYNCCSTATIONRC
+    echo 'path_to_excludes="$HOME/.config/rscs/rsexcludes"' >> $RSYNCCSTATIONRC
+    echo 'source_path_file="$HOME/.config/rscs/rstargetlist"' >> $RSYNCCSTATIONRC
+    . $RSYNCCSTATIONRC
+    echo "Documents;;;;;$HOME/Documents" > $source_path_file
+    echo '*~' > $path_to_excludes
+    echo '*.swp' >> $path_to_excludes
+    echo "You will need to examine the rsynccstation.rc file at:"
+    echo $RSYNCCSTATIONRC
+    echo "and set the correct server parameters for use. Please also double-check:"
+    echo "$source_path_file"
+    echo "$path_to_excludes"
+    echo "For lists of files to sync and a regex list of files to ignore."
+    echo
+    echo "See the included documentation for more information."
+    exit 0
+fi
+
+. $RSYNCCSTATIONRC
+
 upload="yes"
 download="yes"
-
-#Excluded files
-#I added an example excludes file based on files I've had problems with in the past.
-path_to_excludes="$HOME/.rsexcludes.regex" #Change this to the path to the excludes file
-
-#source and destination
-#Please note that due to the nature of rsync, these MUST be absolute paths. They also
-#must match on the source and destination, so if you mirror /home/joey/SyncMe on one
-#machine, you'll get /home/joey/SyncMe on the other.
-source_path_file="$HOME/.rstargetlist"
-# In this case, ~/.rstargetlist should contain something like this:
-#
-#    target1;;;;;/home/joe/syncme
-#    target2;;;;;/home/joe/test
-#    target3;;;;;/home/joe/test2
-#
-# (without the leading spaces)
-
 
 target="" # Default target to sync (Default, NONE)
 

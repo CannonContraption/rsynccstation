@@ -1,0 +1,6 @@
+# Server Parameters
+server="10.0.0.1"
+username="joe"
+portnumber="22"
+path_to_excludes="$HOME/.config/rscs/rsexcludes"
+source_path_file="$HOME/.config/rscs/rstargetlist
