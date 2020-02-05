@@ -99,6 +99,11 @@ done
 sync_one()
 {
     # Automatic parameters
+    source_name=$(grep -E "^$@;;;;;" $source_path_file | awk -F ';;;;;' '{print $1}')
+    if [ "$source_name" != "$@" ]; then
+        echo "Path \"$@\" not found!"
+        return 1
+    fi
     source_path=$(grep -E "^$@;;;;;" $source_path_file | awk -F ';;;;;' '{print $2}')
     dest_path=$(echo $source_path | awk -F '/' '{OFS="/"; $(NF)=""; print $0}')
     # From here down is the code to sync stuff itself.
