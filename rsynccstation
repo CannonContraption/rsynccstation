@@ -78,7 +78,7 @@ sshcommand="ssh"
 while [ $# != 0 ]; do
     case $1 in
         "-p" ) shift;
-               sshcommand="$sshcommand -p $1" ;;
+               portnumber="$1" ;;
         "-s" ) shift;
                server="$1" ;;
         "-u" ) shift;
@@ -100,16 +100,19 @@ while [ $# != 0 ]; do
     shift
 done
 
+sshcommand="ssh -p $portnumber"
+
 sync_one()
 {
     # Automatic parameters
     source_name=$(grep -E "^$@;;;;;" $source_path_file | awk -F ';;;;;' '{print $1}')
     if [ "$source_name" != "$@" ]; then
-        echo "Path \"$@\" not found!"
+        echo "Path to \"$@\" not found!"
         return 1
     fi
     source_path=$(grep -E "^$@;;;;;" $source_path_file | awk -F ';;;;;' '{print $2}')
     dest_path=$(echo $source_path | awk -F '/' '{OFS="/"; $(NF)=""; print $0}')
+    echo "\033[7;33m$source_name\033[m"
     # From here down is the code to sync stuff itself.
     # Start with an rsync pull operation. Bring in new files first.
     if [ -n "$download" ]; then
